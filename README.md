@@ -3,12 +3,12 @@
 
 WP_433 is an Arduino microcontroler program for transmitting weather sensor data to an rtl_433 server via 433MHz (ISM band) radio transmission.  It is a redevelopment into the rtl_433 ISM-band wireless remote sensor system of the earlier [WeatherStation](https://github.com/hdtodd/WeatherStation) code.  That system relied upon a USB-serial connection to a host computer whereas WP_433 transmits over the ISM band and so does not require an ongoing connection to a host computer.
 
+WP_433 uses the [omnisensor](https://github.com/hdtodd/omnisensor_433) protocol to encapulate data from multiple types of sensors into a single message.  That protocol allows for multiple formats for messages, so the WP_433 system can be easily adapted to other types of sensors.
+
 ## Components
 
-WP_433 was developed with the Arduino Uno, but it should be compatible with other microcontrollers that are supported by the Arduino IDE.  The components supported in the code in this repository include:
+WP_433 was developed with the Arduino Uno, but it should be compatible with other microcontrollers that are supported by the Arduino IDE.  The sensor components supported in the code in this repository include:
 
-*  The Arduino Uno R3
-*  A 433MHz transmitter (or other ISM-band transmitter appropriate for your locale)
 *  The MPL3115 temperature/barometer sensor
 *  The Adafruit DHT20-ADT20 temperature/humidity sensor
 *  Multiple DS18B20 thermal sensors
@@ -17,6 +17,15 @@ WP_433 was developed with the Arduino Uno, but it should be compatible with othe
 The WS_433 code supports the use of any combination of these sensors.
 
 If no sensor is found, WP_433 simply reports the voltage of the Arduino power supply.
+
+## Requirements
+
+*  A host computer with the Arduino IDE installed
+*  An Arduino Uno
+*  A 433MHz transmitter (or ISM-band transmitter using a frequency legal in your locale)
+*  One or more sensors from the set [MPL3115, DHT20, DS18B10, OSEPP Light-01], with the appropriate library code for each device installed in the Arduino IDE library.
+*  An rtl_433 server with [omnisensor](https://github.com/hdtodd/omnisensor_433) protocol support installed.
+
 
 
 
