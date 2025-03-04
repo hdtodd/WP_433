@@ -300,17 +300,15 @@ class WP_433 : public ISM_Device {
 
   public:
     // omni timing durations
-    // Timings adjusted for Pico 2 based on rtl_433 recording
-    // Apparently more delay in pulse & less in gap execution
     /* clang-format off */
     int sigLen             = 6;
     SIGNAL omni_signals[6] = {
-            {SIG_SYNC,     "Sync",     600,  600},  // 600, 600
-            {SIG_SYNC_GAP, "Sync-gap", 200,  800},  // 200, 800
-            {SIG_ZERO,     "Zero",     400,  200},  // 400, 200
-            {SIG_ONE,      "One",      200,  400},  // 200, 400
-            {SIG_IM_GAP,   "IM_gap",     0, 1250},
-            {SIG_PULSE,    "Pulse",      0,    0}   // spare
+        {SIG_SYNC,     "Sync",     600,  600},  // 600, 600
+        {SIG_SYNC_GAP, "Sync-gap", 200,  800},  // 200, 800
+        {SIG_ZERO,     "Zero",     400,  200},  // 400, 200
+        {SIG_ONE,      "One",      200,  400},  // 200, 400
+        {SIG_IM_GAP,   "IM_gap",     0, 1250},
+        {SIG_PULSE,    "Pulse",      0,    0}   // spare
     };
     /* clang-format on */
 
@@ -445,7 +443,7 @@ dsInfo dsList[DSMAX + 1];     // max number of DS devices + loop guard
 int dsCount;                  // Count the number of DS18B20 probes
 uint8_t dsResMode = 1;        // use 10-bit for DS1820B precision
 void readSensors(struct recordValues *rec);
-void reportOut(struct recordValues *rec);
+void reportSensors(struct recordValues *rec);
 float readVcc(void);
 struct recordValues rec;
 
