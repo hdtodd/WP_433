@@ -14,9 +14,7 @@ WP_433 was developed with the Arduino Uno, but it should be compatible with othe
 *  Multiple DS18B20 thermal sensors
 *  The OSEPP Light-01 light sensor.
 
-The WS_433 code supports the use of any combination of these sensors.
-
-If no sensor is found, WP_433 simply reports the voltage of the Arduino power supply.
+The WS_433 code supports the use of any combination of these sensors.  If no sensor is found, WP_433 simply reports the voltage of the Arduino power supply.
 
 ## Requirements
 
