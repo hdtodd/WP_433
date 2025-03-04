@@ -19,9 +19,10 @@ The WS_433 code supports the use of any combination of these sensors.  If no sen
 ## Requirements
 
 *  A host computer with the Arduino IDE installed
-*  An Arduino Uno
+*  An Arduino Uno or similar microcontroller
 *  A 433MHz transmitter (or ISM-band transmitter using a frequency legal in your locale)
-*  One or more sensors from the set [MPL3115, DHT20, DS18B10, OSEPP Light-01], with the appropriate library code for each device installed in the Arduino IDE library.
+*  One or more sensors from the set [MPL3115, DHT20, DS18B10, OSEPP Light-01] connected into the microcontroller
+*  The appropriate library code for each device installed in the Arduino IDE library.
 *  An rtl_433 server with [omnisensor](https://github.com/hdtodd/omnisensor_433) protocol support installed.
 
 
