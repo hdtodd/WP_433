@@ -1,7 +1,7 @@
 /* -*- mode: c++ ; indent-tabs-mode: nil; tab-width: 4; c-basic-offset: 4; -*- */
 
 /** @file
-   WS_433 remote weather sensor, v0.1
+   WP_433 remote weather sensor, v1.0
    
    Copyright (C) 2025 H. David Todd <hdtodd@gmail.com>
 
@@ -12,35 +12,30 @@
 */
 
 /*
+
+   See the WP_433.h file for pin connections to transmitter and sensor
+   Edit that .h file if you change connection pins!!!
   
-   MPL3115A2 and Chronodot communications handled by the I2C library of Wayne
+   MPL3115A2 communications are handled by the I2C library of Wayne
    Truchsess to avoid the lost bits and unsynchronized byte frames that were
    common when using the Wire library, apparently caused by the "repeat-start"
    method used by Freescale but not supported well by Wire.  Highly stable with
-   I2C library. MPL3115A2 and Chronodot device handlers rewritten to use the I2C
+   I2C library. MPL3115A2 device handler rewritten to use the I2C
    library.
 
-   MPL3115A code based on code by: A.Weiss, 7/17/2012, changes by
+   MPL3115A code is based on code by: A.Weiss, 7/17/2012, changes by
    Nathan Seidle Sept 23rd, 2013 (SparkFun), and Adafruit's TFT Library
 
    The OneWire library is used for communication with the DS18B20
-   sensor.  MPL3115A2 and Chronodot communications handled by the
-   I2C library of Wayne Truchsess to avoid the lost bits and
-   unsynchronized byte frames that were common when using the
-   Wire library, apparently caused by the "repeat-start" method used
-   by Freescale but not supported well by Wire.  Highly stable with
-   the I2C library.
+   sensor.  
 
    The MPL3115A2 and Chronodot device handlers were rewritten to use the
    I2C library.  The MPL3115A2 library is based on the MPLhelp3115A code
    by A.Weiss, 7/17/2012, with changes by Nathan Seidle Sept 23rd,
    2013 (SparkFun).
 
-   For the ST7735-based TFT display, Adafruit's TFT Library is used.
-
-   Code and revisions to this program by HDTodd:
-
    ----------------------------------------------------------------------
+   Code and revisions to this program by HDTodd:
    Setup and Code Management
 
    Uses the F() macro to move strings to PROGMEN rather than use from SRAM;
@@ -49,22 +44,6 @@
         License : This code is public domain but you buy those original
                   authors(Weiss, Seidle) a beer if you use this and meet them
                   someday (Beerware license).
-
-   Edit .h file if you change connection pins!!!
-
-   Light sensor: data line A3; VCC to 5v0
-
-   Hardware Connections to MPL3115A2 
-     -VCC = 3.3V
-     -SDA = A4    Add 330 ohm resistor in series if using 5v VCC
-     -SCL = A5    Add 330 ohm resistor in series if using 5v VCC
-     -GND = GND
-     -INT pins can be left unconnected for this demo
-
-   Hardware connections to the DS18B20
-     -VCC (red)     = 3.3V DOES NOT USE PARASITIC DATA/POWER
-     -GND (black)   = GND
-     -DATA (yellow) = A5 with 4K7 ohm pullup resistor to VCC
 
    Author:
      David Todd, hdtodd@gmail.com
@@ -209,12 +188,9 @@
 #define DBG_println(...)
 #endif
 
+// Time between sampling & broadcasts
 //#define LOOPTIME 5*1000
 #define LOOPTIME 30*1000
-
-#define TX      3      // Use pin 3 to control transmitter
-#define LED    13      // LED active on GPIO 13 when transmitting
-#define REPEATS 4      // Number of times to repeat packet in one transmission
 
 // #include <stdio.h>
 #include <Adafruit_AHTX0.h>
@@ -222,20 +198,7 @@
 #include <MPL3115A2.h> // MPL3115 alt/baro/temp
 #include <OneWire.h>
 #include <I2C.h>       // for I2C communication
-//#include <Wire.h>
-//#include <SPI.h>
-#include "WS_433.h"    // and our own defs of pins etc
-
-// osepp.com, LIGHT-01 sensor
-// Analog pin reads 0-1023 for 0-VCC voltage
-// Mapped to 0..100 for light intensity
-int light_sensor = A3;
-#define VCC 3
-#if VCC != 5 
-    static const long vmax = (3.3/5.0)*1023;  // assume 3V3
-#else        // assume 5v0
-    static const long vmax = 1023;            // assume 5v0
-#endif
+#include "WP_433.h"    // and our own defs of pins etc
 
 /* "SIGNAL_T" are the possible signal types.  Each signal has a
     type (index), name, duration of asserted signal high), and duration of
@@ -333,7 +296,7 @@ class ISM_Device {
     }; // end playback()
 }; // end class ISM_device
 
-class WS_433 : public ISM_Device {
+class WP_433 : public ISM_Device {
 
   public:
     // omni timing durations
@@ -352,9 +315,9 @@ class WS_433 : public ISM_Device {
     /* clang-format on */
 
     // Instantiate the device by linking 'signals' to our device timing
-    WS_433()
+    WP_433()
     {
-        Device_Name = F("WS_433");
+        Device_Name = F("WP_433");
         signals     = omni_signals;
     };
 
@@ -470,7 +433,7 @@ class WS_433 : public ISM_Device {
 
 // Global variables
 
-WS_433   om;                  // The omni object as a global
+WP_433   om;                  // The omni object as a global
 int    count   = 0;           // Count the packets sent
 bool   first   = true;
 boolean haveDHT20, haveMPL3115, haveDS18;
@@ -491,7 +454,7 @@ void setup(void)
 {
     DBG_begin(9600);
     delay(1000);
-    DBG_println(F("WS_433 starting"));
+    DBG_println(F("WP_433 starting"));
     I2c.begin();                      // join i2c bus
     I2c.setSpeed(1);                  // go fast
     DBG_println(F("I2C started"));
@@ -505,25 +468,25 @@ void setup(void)
     haveMPL3115 = baro.begin(); // is MPL3115 device there?
     DBG_println(F("finished baro.begin"));
     if (haveMPL3115) {          // yes, set parameters
-        DBG_println(F("[%WS] MPL3115 is connected"));
+        DBG_println(F("[%WP] MPL3115 is connected"));
         baro.setOversampleRate(sampleRate);
         baro.setAltitude(MY_ALTITUDE); // Set with known altitude
     }
     else {
-        DBG_println(F("[%WS] MPL3115A2 is NOT connected!"));
+        DBG_println(F("[%WP] MPL3115A2 is NOT connected!"));
     };
 
     haveDHT20 = myDHT20.begin();// Create temp/humidity sensor
     if (haveDHT20) {
-      DBG_println(F("[%WS] DHT20 is connected"));
+      DBG_println(F("[%WP] DHT20 is connected"));
     }
     else {
-      DBG_println(F("[%WS] DHT20 is NOT connected!"));
+      DBG_println(F("[%WP] DHT20 is NOT connected!"));
     };
 
     haveDS18 = ds18.begin();
     if (!haveDS18) {
-        DBG_println(F("[%WS] DS18 probes NOT connected!"));
+        DBG_println(F("[%WP] DS18 probes NOT connected!"));
     }
     else {
         ds18.reset();
@@ -556,17 +519,17 @@ void setup(void)
         // Make sure we have at least SOME DS18 devices and not too many
 
         if (dsCount <= 0) {
-            DBG_println(F("[%WS] No valid DS18-class devices found!"));
+            DBG_println(F("[%WP] No valid DS18-class devices found!"));
             haveDS18 = false;
         };
         if (dsCount >= DSMAX) {
             DBG_println(
-                    F("[%WS] Number of OneWire devices exceeds internal storage limit"));
+                    F("[%WP] Number of OneWire devices exceeds internal storage limit"));
             DBG_print(F("             Only "));
             DBG_print(--dsCount);
             DBG_print(F(" DS18 devices will be sampled."));
         };
-        DBG_print(F("[%WS] DS18 probes connected: "));
+        DBG_print(F("[%WP] DS18 probes connected: "));
         DBG_print(dsCount);
         readSensors(&rec);
         DBG_print(F("\tLabeled:"));
@@ -589,7 +552,7 @@ void setup(void)
     }; // end else (!haveDS)
 
     // And finally, announce ourselves
-    DBG_println(F("WS_433 Arduino-Based Weather Sensor startup complete"));
+    DBG_println(F("WP_433 Arduino-Based Weather Sensor startup complete"));
 } // end setup()
 
 // -----------------------------------------------------------------

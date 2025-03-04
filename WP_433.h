@@ -1,40 +1,53 @@
-// Definitions used by the Arduino Uno Weather Sensor,  WS_433.ino
+// Definitions used by the Arduino Uno Weather Sensor,  WP_433.ino
 //
-#define Vers "WS_433 v1.0"    // <Code-version> 
+#define Vers "WP_433 v1.0"    // <Code-version> 
+
+#define LED    13      // Flash LED on pin 13 when transmitting
+#define REPEATS 4      // Number of times to repeat packet in one transmission
 
 /* Summary of Uno pin assignments:
-   D2   DHT22 data line
+   A3   OSEPP Light-01 light sensor data line
    D3   433Mhz XMT data line
    D5   DS18 data line (OneWire data line)
-   A4   MPL3115 SDA line (Uno SDA pin)
-   A5   MPL3115 SCL line (Uno SCL line)
-
-   Adafruit MPL3115 has level-shifting; no resistor needed
-   to use 5V as VCC
+   SCL  MPL3115 & DHT20 SCL
+   SDA  MPL3115 & DHT20 SDA
+   MPL3115 & DHT20 have voltage level-shifting;
+   no resistor needed to use 5V as VCC
 */
+
+// Transmitter connection
+#define TX      3      // Use pin 3 to control transmitter
+
+// OSEPP Light-01 light sensor
+//    Data line A3; VCC to Uno 5V, GND to Uno GND
+// Analog pin reads 0-1023 for 0-VCC voltage
+// Mapped to 0..100 for light intensity
+// Since it can operate on 3V3 to 5V0, we need to
+//    map the measured voltage against the range
+//    that VCC might have.  Set VCC here to do that.
+int light_sensor = A3;
+#define VCC 3
+#if VCC != 5 
+    static const long vmax = (3.3/5.0)*1023;  // assume 3V3
+#else        // assume 5v0
+    static const long vmax = 1023;            // assume 5v0
+#endif
 
 // DS18 pin definitions and parameters
 // We use powered rather than parasitic mode
-//     DS18 data wire to Uno pin 5
+//     DS18 data wire to Uno pin D5
 //     with 4K7 Ohm pullup to VCC 5V
 //     VCC to Uno 5v, GND to Uno GND
 #define oneWirePin 5          // Uno pin 5 for OneWire connections to DS18B20
 #define dsResetTime 250       // delay time req'd after search reset in msec
 #define DSMAX 4               // max number of devices we're prepared to handle
 
-// DHT22 pin definitions and parameters
-//     Data pin to Uno pin 2
-//     connect a 4K7-10K pull-up resistor between VCC 5v and data pin
-//     VCC to Uno 5v, GND to Uno GND
-#define DHTPIN 2
+// DHT20 and MPL3115 
+//     SCL to Uno SCL
+//     SDA to Uno SDA
+//     VCC to Uno 5v, GND to Uno G
 
-#define DHTTYPE DHT22         // the model of our sensor
-                              // Alternates: DHT11 or DHT21
-
-// MPL3115A2 pin definitions and parameters
-//    SCL to Uno pin A5 (SCL)
-//    SDA to Uno pin A4 (SDA)
-//    VCC to Uno 5v, GND to Uno GND
+// MPL3115 settings
 uint8_t sampleRate=S_128;     // Sample 128 times for each MPL3115A2 reading
 #define MY_ALTITUDE 183       // Set to your GPS-verified altitude in meters
                               // if you want altitude readings to be corrected
@@ -64,4 +77,4 @@ struct recordValues {
   struct mplReadings mpl;
   struct dhtReadings dht;
   struct dsReadings ds18;
-    };
+};
