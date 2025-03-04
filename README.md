@@ -14,7 +14,7 @@ WP_433 was developed with the Arduino Uno, but it should be compatible with othe
 *  Multiple DS18B20 thermal sensors
 *  The OSEPP Light-01 light sensor.
 
-The WS_433 code supports the use of any combination of these sensors.  If no sensor is found, WP_433 simply reports the voltage of the Arduino power supply.
+The WS_433 code supports the use of any combination of these sensors.  If no sensor is found, WP_433 simply reports the voltage of the Arduino power supply and a fictional value for light intensity.
 
 ## Requirements
 
@@ -25,6 +25,32 @@ The WS_433 code supports the use of any combination of these sensors.  If no sen
 *  The appropriate library code for each device installed in the Arduino IDE library.
 *  An rtl_433 server with [omnisensor](https://github.com/hdtodd/omnisensor_433) protocol support installed.
 
+## Getting Started
+
+The Arduino IDE Serial Monitor window will show:
+```
+17:51:26.418 -> --------------------------------
+17:51:26.450 -> Report of readings from sensors:
+17:51:26.514 -> DHT20:  	Temp=22, RH=23%
+17:51:26.514 -> MPL3115:	Temp=23, Alt=181m, Baro=101895Pa
+17:51:26.578 -> DS18B20:	Temp IN: 23    
+17:51:26.611 -> Light:		98%
+17:51:26.775 -> Transmit msg 21	iTemp=23.30˚C, oTemp=22.90˚C, iHum=23.00%, Light=98.00%, Press=1019.00hPa, VCC=4.75volts
+17:51:26.871 -> 	The msg packet, length=80, in hex: 0x 11 0E 90 E5 17 62 27 CE AF 2E 
+17:51:26.968 -> 	and as a bit string: 00010001000011101001000011100101000101110110001000100111110011101010111100101110
+```
+
+and monitoring the rtl_433 JSON feed with `mosquitto_sub -h pi-1 -t "rtl_433/pi-1/events"`, for example, will show
+```
+{"time":"2025-03-04 17:55:08","protocol":275,"model":"omni","id":1,"channel":1,"temperature_C":23.3,"temperature_2_C":22.8,"humidity":23.0,"Light %":99.0,"pressure_hPa":1018.8,"voltage_V":4.77,"mic":"CRC","mod":"ASK","freq":433.95258,"rssi":-0.220131,"snr":16.9172,"noise":-17.1373}
+```
+
+
+## Operational Notes
+
+*  If the light sensor is connected to 3V3 as its VCC, "#define VCC 3" in WS_433.h in the "light sensor" section.
+*  The light sensor pin is set in "INPUT_PULLUP" mode, so in the absence of a sensor, the light reading will be ~100% and will be reported even if no other sensors are found.
+*  The Arduino Uno VCC measurement is approximate.  Its accuracy can be improved by calibrating VCC with a voltmeter, but the measurement is mostly useful for monitoring trends.
 
 
 

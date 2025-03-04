@@ -26,7 +26,7 @@
 //    map the measured voltage against the range
 //    that VCC might have.  Set VCC here to do that.
 int light_sensor = A3;
-#define VCC 3
+#define VCC 5
 #if VCC != 5 
     static const long vmax = (3.3/5.0)*1023;  // assume 3V3
 #else        // assume 5v0
@@ -77,4 +77,5 @@ struct recordValues {
   struct mplReadings mpl;
   struct dhtReadings dht;
   struct dsReadings ds18;
+  uint8_t light;
 };

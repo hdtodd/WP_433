@@ -177,11 +177,13 @@
 #define DEBUG // SET TO #undef to disable execution trace
 
 #ifdef DEBUG
+bool debug = true;
 #define DBG_begin(...)   Serial.begin(__VA_ARGS__);
 #define DBG_print(...)   Serial.print(__VA_ARGS__)
 #define DBG_write(...)   Serial.write(__VA_ARGS__)
 #define DBG_println(...) Serial.println(__VA_ARGS__)
 #else
+bool debug = false;
 #define DBG_begin(...)
 #define DBG_print(...)
 #define DBG_write(...)
@@ -321,7 +323,7 @@ class WP_433 : public ISM_Device {
 
     /* clang-format off */
     /* Routines to create 80-bit omni datagrams from sensor data
-       Pack <fmt, id, iTemp, oTemp, iHum, oHum, press, volts> into a 72-bit
+       Pack <fmt, id, iTemp, oTemp, iHum, light, press, volts> into a 72-bit
          datagram appended with a 1-byte CRC8 checksum (10 bytes total).
          Bit fields are binary-encoded, most-significant-bit first.
 
@@ -357,7 +359,7 @@ class WP_433 : public ISM_Device {
     /* clang-format on */
 
     void pack_msg(uint8_t fmt, uint8_t id, int16_t iTemp, int16_t oTemp,
-            uint8_t iHum, uint8_t oHum, uint16_t press, uint16_t volts,
+            uint8_t iHum, uint8_t light, uint16_t press, uint16_t volts,
             uint8_t msg[])
     {
         msg[0] = (fmt & 0x0f) << 4 | (id & 0x0f);
@@ -365,7 +367,7 @@ class WP_433 : public ISM_Device {
         msg[2] = ((iTemp << 4) & 0xf0) | ((oTemp >> 8) & 0x0f);
         msg[3] = oTemp & 0xff;
         msg[4] = iHum & 0xff;
-        msg[5] = oHum & 0xff;
+        msg[5] = light & 0xff;
         msg[6] = (press >> 8) & 0xff;
         msg[7] = press & 0xff;
         msg[8] = volts & 0xff;
@@ -375,7 +377,7 @@ class WP_433 : public ISM_Device {
 
     // Unpack message into data values it represents
     void unpack_msg(uint8_t msg[], uint8_t &fmt, uint8_t &id, int16_t &iTemp,
-            int16_t &oTemp, uint8_t &iHum, uint8_t &oHum, uint16_t &press,
+            int16_t &oTemp, uint8_t &iHum, uint8_t &light, uint16_t &press,
             uint8_t &volts)
     {
         if (msg[9] != crc8(msg, 9, 0x97, 0x00)) {
@@ -386,7 +388,7 @@ class WP_433 : public ISM_Device {
             iTemp = 0;
             oTemp = 0;
             iHum  = 0;
-            oHum  = 0;
+            light  = 0;
             press = 0;
             volts = 0;
         }
@@ -398,7 +400,7 @@ class WP_433 : public ISM_Device {
                     ((int16_t)((((uint16_t)msg[2]) << 12) | ((uint16_t)msg[3]) << 4)) >>
                     4;
             iHum  = msg[4];
-            oHum  = msg[5];
+            light  = msg[5];
             press = ((uint16_t)(msg[6] << 8)) | msg[7];
             volts = msg[8];
         };
@@ -432,9 +434,11 @@ class WP_433 : public ISM_Device {
 // Global variables
 
 WP_433   om;                  // The omni object as a global
-int    count   = 0;           // Count the packets sent
-bool   first   = true;
-boolean haveDHT20, haveMPL3115, haveDS18;
+uint8_t omniLen = 80;         // omni messages are 80 bits long
+int    count    = 0;          // Count the packets sent
+bool   first    = true;
+boolean haveDHT, haveMPL, haveDS18;
+struct recordValues rec;
 MPL3115A2 baro;               // Barometer/altimeter/thermometer
 Adafruit_AHTX0 myDHT20;       // create the temp/RH object
 sensors_event_t humidity, temp; // Object needed by DHT20
@@ -444,8 +448,8 @@ int dsCount;                  // Count the number of DS18B20 probes
 uint8_t dsResMode = 1;        // use 10-bit for DS1820B precision
 void readSensors(struct recordValues *rec);
 void reportSensors(struct recordValues *rec);
+void reportMsg(uint8_t msg[]);
 float readVcc(void);
-struct recordValues rec;
 
 // -----------------------------------------------------------------
 void setup(void)
@@ -459,13 +463,15 @@ void setup(void)
     // Force transmit pin and LED pin low as initial conditions
     pinMode(TX, OUTPUT);
     pinMode(LED, OUTPUT);
+    pinMode(light_sensor, INPUT);
+    pinMode(light_sensor, INPUT_PULLUP);
     digitalWrite(TX, LOW);
     digitalWrite(LED, LOW);
-    baro        = MPL3115A2();  // create barometer
+    baro = MPL3115A2();  // create barometer
     DBG_println(F("Created baro"));
-    haveMPL3115 = baro.begin(); // is MPL3115 device there?
+    haveMPL = baro.begin(); // is MPL3115 device there?
     DBG_println(F("finished baro.begin"));
-    if (haveMPL3115) {          // yes, set parameters
+    if (haveMPL) {          // yes, set parameters
         DBG_println(F("[%WP] MPL3115 is connected"));
         baro.setOversampleRate(sampleRate);
         baro.setAltitude(MY_ALTITUDE); // Set with known altitude
@@ -474,8 +480,8 @@ void setup(void)
         DBG_println(F("[%WP] MPL3115A2 is NOT connected!"));
     };
 
-    haveDHT20 = myDHT20.begin();// Create temp/humidity sensor
-    if (haveDHT20) {
+    haveDHT = myDHT20.begin();// Create temp/humidity sensor
+    if (haveDHT) {
       DBG_println(F("[%WP] DHT20 is connected"));
     }
     else {
@@ -556,68 +562,42 @@ void setup(void)
 // -----------------------------------------------------------------
 void loop(void)
 {
-    uint8_t omniLen = 80;  // omni messages are 80 bits long
     uint8_t msg[10] = {0}; // and 10 bytes long
-    uint8_t fmt, id = 13, ihum, ohum, volts;
-    int16_t itemp, otemp;
+    uint8_t fmt     = 1;   // we're using format #1
+    uint8_t id      = 1;   // and we'll be device 1
+    uint8_t ihum, light, volts;
     uint16_t press;
-    float itempf, otempf, ihumf, ohumf, pressf, voltsf;
-    static char disp[12];
+    int16_t itemp, otemp;
+    float itempf, otempf, ihumf, lightf, pressf, voltsf;
 
-    // Read all the available sensors into "rec"
+    // Read all the available sensors into "rec" & report
     readSensors(&rec);
-
-    DBG_println(F("\n--------------------------------"));
-    DBG_println(F("Report of readings from sensors:"));
-    DBG_print(F("DHT20:  \tTemp=")); 
-    DBG_print((int) rec.dht.tempf);
-    DBG_print(F(", RH="));
-    DBG_print((int) (rec.dht.rh));
-    DBG_println(F("%"));
-    DBG_print(F("MPL3115:\tTemp="));
-    DBG_print((int) rec.mpl.tempf);
-    DBG_print(F(", Alt="));
-    DBG_print((int) rec.mpl.alt);
-    DBG_print(F("m, Baro="));
-    DBG_print((long) rec.mpl.press);
-    DBG_println(F("Pa"));
-    DBG_print(F("DS18B20:\tTemp "));
-    for (uint8_t dev=0; dev<dsCount; dev++) {
-        DBG_print(rec.ds18.label[dev]);
-        DBG_print(": ");
-        DBG_print((int) rec.ds18.tempf[dev]);
-        DBG_print("    ");
-    };
-    DBG_println();
+    if (debug) reportSensors(&rec);
 
     // Pack readings for ISM transmission
-    fmt   = 1;
+    // Use the DS18B20 labeled "IN" as temperature_1 and
+    // the one labeled "OU" as temperature_2;
+    // Default temperature_1 to the MPL (if there is one) and
+    // temperature_2 to the DHT20 (if there is one)
     for (uint8_t dev = 0; dev < dsCount; dev++) {
         if( (rec.ds18.label[dev][0] == 'I')
             && (rec.ds18.label[dev][1] == 'N') )
-            {
                 itemp = (uint16_t)( ( rec.ds18.tempf[dev] + 0.05 ) * 10 );
-            }
-            else {
-                itemp = 0;
-            };
+            else
+                itemp = (haveMPL) ? (uint16_t)( ( rec.mpl.tempf + 0.05 ) * 10) : 0;
         if( (rec.ds18.label[dev][0] == 'O')
             && (rec.ds18.label[dev][1] == 'U') )
-            {
                 otemp = (uint16_t)( ( rec.ds18.tempf[dev] + 0.05 ) * 10 );
-            } 
-            else {
-                otemp = 0;
-            }
+            else
+                otemp = (haveDHT) ? (uint16_t)( ( rec.dht.tempf + 0.05 ) * 10) : 0;
     };
     ihum  = (uint16_t)(rec.dht.rh + 0.5); // round
-//    ohum  = 99;
-    ohum  = (uint8_t) map(analogRead(light_sensor), 0, vmax, 0, 100);
+    light = rec.light;
     press = (uint16_t)( (rec.mpl.press +5.0) / 10.0);         // hPa * 10
     volts = (uint8_t) ( ((readVcc()-3.00) + .005) * 100.0 );
 
     // Pack the message, create the waveform, and transmit
-    om.pack_msg(fmt, id, itemp, otemp, ihum, ohum, press, volts, msg);
+    om.pack_msg(fmt, id, itemp, otemp, ihum, light, press, volts, msg);
     om.make_wave(msg, omniLen);
     digitalWrite(LED, HIGH);
     om.playback();
@@ -626,48 +606,7 @@ void loop(void)
 
     // Write back on serial monitor the readings we're transmitting
     // Validates pack/unpack formatting for reconciliation on rtl_433
-    om.unpack_msg(msg, fmt, id, itemp, otemp, ihum, ohum, press, volts);
-    itempf = ((float)itemp) / 10.0;
-    otempf = ((float)otemp) / 10.0;
-    ihumf  = ((float)ihum);
-    ohumf  = ((float)ohum);
-    pressf = ((float)press);
-    voltsf = ((float)volts) / 100.0 + 3.00;
-    DBG_print(F("Transmit msg "));
-    DBG_print(++count);
-    DBG_print(F("\tiTemp="));
-    DBG_print(itempf);
-    DBG_print(F("˚C"));
-    DBG_print(F(", oTemp="));
-    DBG_print(otempf);
-    DBG_print(F("˚C"));
-    DBG_print(F(", iHum="));
-    DBG_print(ihumf);
-    DBG_print(F("%"));
-    DBG_print(F(", oHum="));
-    DBG_print(ohumf);
-    DBG_print(F("%"));
-    DBG_print(F(", Press="));
-    DBG_print(pressf / 10.0);
-    DBG_print(F("hPa"));
-    DBG_print(F(", VCC="));
-    DBG_print(voltsf);
-    DBG_print(F("volts"));
-    DBG_print(F("\tin hex: 0x "));
-
-    for (uint8_t j = 0; j < 10; j++) {
-        if (msg[j] < 16)
-            DBG_print('0');
-        DBG_print(msg[j], HEX);
-        DBG_print(' ');
-    };
-    DBG_println();
-    DBG_print(F("\tThe msg packet, length="));
-    DBG_print((int)omniLen);
-    DBG_print(F(", as a string of bits: "));
-    for (uint8_t i = 0; i < omniLen; i++)
-        DBG_print(((msg[i / 8] >> (7 - (i % 8))) & 0x01));
-    DBG_println();
+    if (debug) reportMsg(msg);
               
     first = false;
     delay(LOOPTIME);
@@ -686,7 +625,7 @@ void readSensors(struct recordValues *rec)
     if (haveDS18)
         ds18.readAllTemps();
 
-    if (haveMPL3115) {
+    if (haveMPL) {
         // Adjust pressure for calibration and altitude
         rec->mpl.press = baro.readPressure() + MY_ELEV_CORR +
                          MY_CALIB_CORR; // Get MPL3115A2 data
@@ -699,7 +638,7 @@ void readSensors(struct recordValues *rec)
         rec->mpl.tempf = 0.0;
     };
 
-    if (haveDHT20) {
+    if (haveDHT) {
         // Get DHT20 data 
         myDHT20.getEvent(&humidity, &temp);
         rec->dht.tempf = temp.temperature;
@@ -726,6 +665,7 @@ void readSensors(struct recordValues *rec)
         rec->ds18.label[dev][0] = rec->ds18.label[dev][1] = '*';
         rec->ds18.label[dev][2]                           = 0x00;
     };
+    rec->light  = (uint8_t) map(analogRead(light_sensor), 0, vmax, 0, 100);
     digitalWrite(LED, LOW);
 }; // end readSensors
 
@@ -789,3 +729,83 @@ float readVcc()
     return 0.0;                         // return result Vcc of 0 if chip is not supported by this function
 #endif
 }
+void reportSensors(struct recordValues *rec)
+{
+    DBG_println(F("\n--------------------------------"));
+    DBG_println(F("Report of readings from sensors:"));
+    DBG_print(F("DHT20:  \tTemp=")); 
+    DBG_print((int) rec->dht.tempf);
+    DBG_print(F(", RH="));
+    DBG_print((int) (rec->dht.rh));
+    DBG_println(F("%"));
+    DBG_print(F("MPL3115:\tTemp="));
+    DBG_print((int) rec->mpl.tempf);
+    DBG_print(F(", Alt="));
+    DBG_print((int) rec->mpl.alt);
+    DBG_print(F("m, Baro="));
+    DBG_print((long) rec->mpl.press);
+    DBG_println(F("Pa"));
+    DBG_print(F("DS18B20:\tTemp "));
+    for (uint8_t dev=0; dev<dsCount; dev++) {
+        DBG_print(rec->ds18.label[dev]);
+        DBG_print(": ");
+        DBG_print((int) rec->ds18.tempf[dev]);
+        DBG_print("    ");
+    };
+    DBG_println();
+    DBG_print(F("Light:\t\t"));
+    DBG_print((int) rec->light);
+    DBG_println('%');
+};
+
+// Prints out the values represented in the 8-byte data packet msg[]
+void reportMsg(uint8_t msg[]) 
+{
+    uint8_t fmt, id,ihum, light, volts;
+    uint16_t press;
+    int16_t itemp, otemp;
+    float itempf, otempf, ihumf, lightf, pressf, voltsf;
+
+    om.unpack_msg(msg, fmt, id, itemp, otemp, ihum, light, press, volts);
+    itempf = ((float)itemp) / 10.0;
+    otempf = ((float)otemp) / 10.0;
+    ihumf  = ((float)ihum);
+    lightf  = ((float)light);
+    pressf = ((float)press);
+    voltsf = ((float)volts) / 100.0 + 3.00;
+    DBG_print(F("Transmit msg "));
+    DBG_print(++count);
+    DBG_print(F("\tiTemp="));
+    DBG_print(itempf);
+    DBG_print(F("˚C"));
+    DBG_print(F(", oTemp="));
+    DBG_print(otempf);
+    DBG_print(F("˚C"));
+    DBG_print(F(", iHum="));
+    DBG_print(ihumf);
+    DBG_print(F("%"));
+    DBG_print(F(", Light="));
+    DBG_print(lightf);
+    DBG_print(F("%"));
+    DBG_print(F(", Press="));
+    DBG_print(pressf / 10.0);
+    DBG_print(F("hPa"));
+    DBG_print(F(", VCC="));
+    DBG_print(voltsf);
+    DBG_println(F("volts"));
+    DBG_print(F("\tThe msg packet, length="));
+    DBG_print((int)omniLen);
+    DBG_print(F(", in hex: 0x "));
+    for (uint8_t j = 0; j < 10; j++) {
+        if (msg[j] < 16)
+            DBG_print('0');
+        DBG_print(msg[j], HEX);
+        DBG_print(' ');
+    };
+    DBG_println();
+    DBG_print(F("\tand as a bit string: "));
+    for (uint8_t i = 0; i < omniLen; i++)
+        DBG_print(((msg[i / 8] >> (7 - (i % 8))) & 0x01));
+    DBG_println();
+    return;
+};
