@@ -14,7 +14,8 @@ WP_433 was developed with the Arduino Uno, but it should be compatible with othe
 
 The WS_433 code supports the use of any combination of these sensors.  If no sensor is found, WP_433 simply reports the voltage of the Arduino power supply and a fictional value for light intensity.
 
-<img width="1443" alt="WP_433_circuit" src="https://github.com/user-attachments/assets/7d7f4a89-04a5-4962-899e-61a8b22f122d" />
+<img width="1452" alt="WP_433_circuit" src="https://github.com/user-attachments/assets/d6b31f6e-6fb4-4beb-ba23-941934daec5b" />
+
 
 ## Requirements
 
