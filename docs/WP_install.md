@@ -70,8 +70,8 @@ The readings from the individual sensors are displayed on the Serial Monitor win
 
 In the repository code as distributed, the values reported by rtl_433 **as transmitted** values come from these  sources:
 
-*  "protocol":275: set by your `omni.c` decoder based on its internal protocol number
-*  "model":"omni": set by your `omni.c` decoder based upon the timings of the signal pattern received.
+*  "protocol":275: set by your `omni.c` decoder protocol number based upon the timings of the signal pattern received matching the timings expected for `omni.c`
+*  "model":"omni": set by the rtl_433 decoder based upon the protocol number
 *  "id":1,"channel":1: set by the `WP_433.ino` code.  You can change "id" to be anything from 0..15, but "channel" is the format number (`fmt` in `WP_433.ino`) for this `omni` packet type.  If you customize `WP_433.ino` to broadcast other sensor data, you'll need to introduce a new format type into both `WP_433.ino` and rtl_433's `omni.c`.  See the `omnisensor` repository for details.
 *  "temperature_C": Temperature from the DS18B20 labeled "IN", if one is found; otherwise the temperature reading from the MPL3115 if available; else 0.
 *  "temperature_2_C": Temperature from the DS18B20 labeled "OU", if one is found; otherwise the temperature reading from the DHT20 if available; else 0.
