@@ -1,7 +1,5 @@
-# WS_433 v1.0
+# WP_433 v1.0 Installation Guide
 ## An rtl_433-compatible, Arduino Uno-based remote weather probe
-
-# Installation Guide
 
 ## Components
 
