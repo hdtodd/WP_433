@@ -29,8 +29,8 @@ The WS_433 code supports the use of any combination of these sensors.  If no sen
 
 1.  On your host computer, clone this repository as a subdirectory of your "Arduino" directory, from the Arduino IDE, so that it has the Arduino board and device libraries available.
 2.  Connect your Arduino to your host computer.
-3.  Compile and download to your Arduino the `WP_433.ino` program from this repository.  Install with the library manager any device libraries not found.
-4.  When the program successfully downloaded, start the Serial Monitor window on your host computer to view the sensor readings and the rtl_433 message as broadcast.
+3.  Compile and download to your Arduino the `WP_433.ino` program from this repository.  If any device libraries are not found, install them with the library manager and recompile, then download.
+4.  When the program has successfully downloaded, start the Serial Monitor window on your host computer to view the sensor readings and the rtl_433 message as broadcast.
 5.  Connect a 433MHz transmitter to pin 3 of the Arduino (with VCC and GND connections).
 6.  Monitor the received broadcasts on your `omnisensor`-enable rtl_433 server with, for example, the command `mosquitto_sub -h <your host> -t "rtl_433/<your host>/events"`.  Watch for packets labeled as coming from device `omni`, with device ID = 1 and channel = 1. Confirm that the data decoded by rtl_433 matches the readings reported by the Arduino on your host computer's Serial Monitor window.
 7.  You can set the device ID to any value 0..15 in the `WP_433.ino` code, but the channel (labeled `fmt` in the `.ino` code) must remain set to 1 unless you implement your own `omnisense` format in the `.ino` code and in the rtl_433 `omni.c` decoder.
