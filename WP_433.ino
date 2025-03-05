@@ -491,6 +491,7 @@ void setup(void)
     haveDS18 = ds18.begin();
     if (!haveDS18) {
         DBG_println(F("[%WP] DS18 probes NOT connected!"));
+        dsCount = 0;
     }
     else {
         ds18.reset();
@@ -579,18 +580,17 @@ void loop(void)
     // the one labeled "OU" as temperature_2;
     // Default temperature_1 to the MPL (if there is one) and
     // temperature_2 to the DHT20 (if there is one)
+    itemp = otemp = -999;  // flag for no IN or OU labels
     for (uint8_t dev = 0; dev < dsCount; dev++) {
-        if( (rec.ds18.label[dev][0] == 'I')
-            && (rec.ds18.label[dev][1] == 'N') )
-                itemp = (uint16_t)( ( rec.ds18.tempf[dev] + 0.05 ) * 10 );
-            else
-                itemp = (haveMPL) ? (uint16_t)( ( rec.mpl.tempf + 0.05 ) * 10) : 0;
-        if( (rec.ds18.label[dev][0] == 'O')
-            && (rec.ds18.label[dev][1] == 'U') )
-                otemp = (uint16_t)( ( rec.ds18.tempf[dev] + 0.05 ) * 10 );
-            else
-                otemp = (haveDHT) ? (uint16_t)( ( rec.dht.tempf + 0.05 ) * 10) : 0;
+        if( (rec.ds18.label[dev][0] == 'I') && (rec.ds18.label[dev][1] == 'N') )
+            itemp = (uint16_t)( ( rec.ds18.tempf[dev] + 0.05 ) * 10 );
+        if( (rec.ds18.label[dev][0] == 'O') && (rec.ds18.label[dev][1] == 'U') )
+            otemp = (uint16_t)( ( rec.ds18.tempf[dev] + 0.05 ) * 10 );
     };
+    if (!haveDS18 || (itemp == -999))  // no DS18 labeled 'IN'
+        itemp = (haveMPL) ? (uint16_t)( ( rec.mpl.tempf + 0.05 ) * 10) : 0;
+    if (!haveDS18 || (otemp == -999))  // no DS18 labeled 'OU'
+        otemp = (haveDHT) ? (uint16_t)( ( rec.dht.tempf + 0.05 ) * 10) : 0;
     ihum  = (uint16_t)(rec.dht.rh + 0.5); // round
     light = rec.light;
     press = (uint16_t)( (rec.mpl.press +5.0) / 10.0);         // hPa * 10
