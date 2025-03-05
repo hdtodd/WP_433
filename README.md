@@ -32,7 +32,7 @@ The WS_433 code supports the use of any combination of these sensors.  If no sen
 3.  Compile and download to your Arduino the `WP_433.ino` program from this repository.  If any device libraries are not found, install them with the library manager and recompile, then download.
 4.  When the program has successfully downloaded, start the Serial Monitor window on your host computer to view the sensor readings and the rtl_433 message as broadcast.
 5.  Connect a 433MHz transmitter to pin 3 of the Arduino (with VCC and GND connections).
-6.  Monitor the received broadcasts on your `omnisensor`-enable rtl_433 server with, for example, the command `mosquitto_sub -h <your host> -t "rtl_433/<your host>/events"`.  Watch for packets labeled as coming from device `omni`, with device ID = 1 and channel = 1. Confirm that the data decoded by rtl_433 matches the readings reported by the Arduino on your host computer's Serial Monitor window.
+6.  Monitor the received broadcasts on your `omnisensor`-enable rtl_433 server with, for example, the command `mosquitto_sub -h <your host> -t "rtl_433/<your host>/events"`.  Watch for packets labeled as coming from device `omni`, with `"id":1,"channel":1`.  Confirm that the data decoded by rtl_433 matches the readings reported by the Arduino on your host computer's Serial Monitor window.
 7.  You can set the device ID to any value 0..15 in the `WP_433.ino` code, but the channel (labeled `fmt` in the `.ino` code) must remain set to 1 unless you implement your own `omnisense` format in the `.ino` code and in the rtl_433 `omni.c` decoder.
 
 In operation, the Arduino IDE Serial Monitor window will show:
@@ -49,7 +49,8 @@ In operation, the Arduino IDE Serial Monitor window will show:
 17:51:26.968 -> 	and as a bit string: 00010001000011101001000011100101000101110110001000100111110011101010111100101110
 ```
 
-and monitoring the rtl_433 JSON feed with `mosquitto_sub -h pi-1 -t "rtl_433/pi-1/events"`, for example, will show
+and monitoring the rtl_433 JSON feed with `mosquitto_sub -h pi-1 -t "rtl_433/pi-1/events"`, for example, will show:
+
 ```
 {"time":"2025-03-04 17:55:08","protocol":275,"model":"omni","id":1,"channel":1,
 "temperature_C":23.3,"temperature_2_C":22.8,"humidity":23.0,"Light %":99.0,
