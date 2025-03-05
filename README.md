@@ -4,7 +4,7 @@
 WP_433 is an Arduino microcontroller program for transmitting weather sensor data to an rtl_433 server via 433MHz (ISM band) radio transmission.  It is a redevelopment into the rtl_433 ISM-band wireless remote sensor environment of the earlier [WeatherStation](https://github.com/hdtodd/WeatherStation) code.  That system relied upon a USB-serial connection to a host computer for logging data.  WP_433 transmits over the ISM band so that standard rtl_433 tools can be used to process or log data.  It does not require an ongoing connection to a host computer.
 
 
-The rtl_433 JSON report of the transmitted data packets look like this:
+The rtl_433 JSON reports of the transmitted data packets look like this:
 
 ```
 {"time":"2025-03-04 17:55:08","protocol":275,"model":"omni","id":1,"channel":1,
