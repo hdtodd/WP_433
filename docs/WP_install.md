@@ -9,7 +9,7 @@ WP_433 was developed with the Arduino Uno, but it should be compatible with othe
 
 *  The MPL3115 temperature/barometer sensor
 *  The Adafruit DHT20-ADT20 temperature/humidity sensor
-*  Multiple DS18B20 thermal sensors
+*  Multiple DS18B20 thermal sensors, likely the 1m cable versions
 *  The OSEPP Light-01 light sensor.
 
 The WS_433 code supports the use of any combination of these sensors.  If no sensor is found, WP_433 simply reports the voltage of the Arduino power supply and a fictional value for light intensity.
@@ -19,7 +19,7 @@ The WS_433 code supports the use of any combination of these sensors.  If no sen
 *  A host computer with the Arduino IDE installed
 *  An Arduino Uno or similar microcontroller
 *  A 433MHz transmitter (or ISM-band transmitter using a frequency legal in your locale)
-*  One or more sensors from the set [MPL3115, DHT20, DS18B10, OSEPP Light-01] connected into the microcontroller
+*  One or more sensors from the set [MPL3115, DHT20, DS18B10, OSEPP Light-01] connected into the microcontroller.  In the circuit diagram, the DS18B20 is shown as a single breadboard device.  A more likely implementation would be to use multiple DS18B20's on 1m cables to monitor temperatures in multiple locations (indoor/outdoor, multiple vats, etc.).
 *  The appropriate library code for each device installed in the Arduino IDE library.
 *  An rtl_433 server with [omnisensor](https://github.com/hdtodd/omnisensor_433) protocol support installed.
 
