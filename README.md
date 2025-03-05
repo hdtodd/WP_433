@@ -33,7 +33,7 @@ The WS_433 code supports the use of any combination of these sensors.  If no sen
 4.  When the program has successfully downloaded, start the Serial Monitor window on your host computer to view the sensor readings and the rtl_433 message as broadcast.
 5.  Connect a 433MHz transmitter to pin 3 of the Arduino (with VCC and GND connections).
 6.  Monitor the received broadcasts on your `omnisensor`-enabled rtl_433 server with, for example, the command `mosquitto_sub -h <your host> -t "rtl_433/<your host>/events"`.  Watch for packets labeled as coming from `"model":"omni","id":1,"channel":1`.  Confirm that the data decoded by rtl_433 matches the readings reported by the Arduino on your host computer's Serial Monitor window.
-7.  Connect from the set [MPL3115, DS18B20, DHT20, Light-01] each of the sensors you have into the Arduino, one at a time, and restart the Arduino.  As you add sensors, the reports of their readings should appear on the Serial Monitor and as received by the rtl_433 server.
+7.  Connect from the set [MPL3115, DS18B20, DHT20, Light-01] each of the sensors you have into the Arduino, one at a time, and restart the Arduino after each addition.  As you add sensors, the reports of their readings should appear on the Serial Monitor and as received by the rtl_433 server.  If not, check your wiring.
 
 In operation, the Arduino IDE Serial Monitor window will show:
 
@@ -72,14 +72,14 @@ The readings from the individual sensors are displayed on the Serial Monitor win
 In the repository code as distributed, the values reported by rtl_433 **as transmitted** values come from these  sources:
 
 *  "protocol":275: set by your `omni.c` decoder based on its internal protocol number
-*  "model":"omni": set by your `omni.c` decoder
-*  "id":1,"channel":1: set by the `WP_433.ino` code.  You can change "id" to be anything from 0..15, but "channel" is the format number (`fmt` in `WP_433.ino`) for this `omni` packet type.  If you customize this to broadcast other sensor data, you'll need to introduce a new format type into both `WP_433.ino` and rtl_433's `omni.c`.  See the `omnisensor` repository for details.
-*  "temperature_C":
-*  "temperature_2_C"
-*  "humidity":
-*  "Light %":
-*  "pressure_hPa":
-*  "voltage_V":
+*  "model":"omni": set by your `omni.c` decoder based upon the timings of the signal pattern received.
+*  "id":1,"channel":1: set by the `WP_433.ino` code.  You can change "id" to be anything from 0..15, but "channel" is the format number (`fmt` in `WP_433.ino`) for this `omni` packet type.  If you customize `WP_433.ino` to broadcast other sensor data, you'll need to introduce a new format type into both `WP_433.ino` and rtl_433's `omni.c`.  See the `omnisensor` repository for details.
+*  "temperature_C": Temperature from the DS18B20 labeled "IN", if one is found; otherwise the temperature reading from the MPL3115 if available; else 0.
+*  "temperature_2_C": Temperature from the DS18B20 labeled "OU", if one is found; otherwise the temperature reading from the DHT20 if available; else 0.
+*  "humidity": Relative Humidity, in %, from DHT20.
+*  "Light %": Read as voltage from the Light-01 photoresistor sensor and scaled to be 0-100%; adjusted for the Light-01 VCC connection voltage (3V3 or 5V0 by `#define VCC` in the `WP_433.h` file.  The `WP_433.ino` code sets the `light_sensor` pin to `INPUT_PULLUP`, so as not to float if no device is attached to that pin.  As a result, the Light reading will be ~100% if no device is attached.
+*  "pressure_hPa": Barometric pressure, in hPa, from MPL3115.
+*  "voltage_V": Scaled from the internal reference voltage of the Arduino.  Not accurate, but may show tends.
 
 Here are details about the data reported and transmitted.
 
