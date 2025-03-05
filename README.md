@@ -16,11 +16,11 @@ The rtl_433 JSON report of the transmitted data packets look like this:
 
 WP_433 uses the [omnisensor](https://github.com/hdtodd/omnisensor_433) protocol to encapulate data from multiple types of sensors into a single message.  That protocol allows for multiple formats for messages, so the WP_433 system can be easily adapted to other types of sensors.
 
-The repository release code includes support for the following sensors:
+The repository release code includes support for any combination the following sensors:
 
 *  MPL3115 temperature and barometric pressure
 *  DHT20 temperature and humidity
-*  DS18B20 (multiple) temperature probes (attached with 1m cables)
+*  DS18B20 (one to four) temperature probes (attached with 1m cables)
 *  Light-01 photoresistor light sensor.
 
 Collection of data from sensors is isolated to one procedure to facilitate easy incorporation of other models of sensors.
@@ -28,7 +28,6 @@ Collection of data from sensors is isolated to one procedure to facilitate easy 
 An installation and customization guide is provided in the `docs` directory of this repository.
 
 A breadboard wiring diagram is provided in the `docs` directory of this repository.
-
 
 ## Author
 David Todd, hdtodd@gmail.com, 2025.03
