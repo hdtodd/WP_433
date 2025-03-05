@@ -42,7 +42,10 @@ The Arduino IDE Serial Monitor window will show:
 
 and monitoring the rtl_433 JSON feed with `mosquitto_sub -h pi-1 -t "rtl_433/pi-1/events"`, for example, will show
 ```
-{"time":"2025-03-04 17:55:08","protocol":275,"model":"omni","id":1,"channel":1,"temperature_C":23.3,"temperature_2_C":22.8,"humidity":23.0,"Light %":99.0,"pressure_hPa":1018.8,"voltage_V":4.77,"mic":"CRC","mod":"ASK","freq":433.95258,"rssi":-0.220131,"snr":16.9172,"noise":-17.1373}
+{"time":"2025-03-04 17:55:08","protocol":275,"model":"omni","id":1,"channel":1,
+"temperature_C":23.3,"temperature_2_C":22.8,"humidity":23.0,"Light %":99.0,
+"pressure_hPa":1018.8,"voltage_V":4.77,"mic":"CRC","mod":"ASK",
+"freq":433.95258,"rssi":-0.220131,"snr":16.9172,"noise":-17.1373}
 ```
 
 
