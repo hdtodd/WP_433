@@ -470,7 +470,7 @@ void setup(void)
     baro = MPL3115A2();  // create barometer
     DBG_println(F("Created baro"));
     haveMPL = baro.begin(); // is MPL3115 device there?
-    DBG_println(F("finished baro.begin"));
+    DBG_println(F("Finished baro.begin"));
     if (haveMPL) {          // yes, set parameters
         DBG_println(F("[%WP] MPL3115 is connected"));
         baro.setOversampleRate(sampleRate);
