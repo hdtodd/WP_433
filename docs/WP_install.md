@@ -81,7 +81,7 @@ In the repository code as distributed, the values reported by rtl_433 **as trans
 
 Here are details about the data reported and transmitted.
 
-The original `WeatherStation` code was designed to support and indoor and outdoor DS18B20 thermal sensors on 1m cables as well as humidity and barometric pressure readings from DHT22 (replaced here by DHT20) and MPL3115 sensors, respectively.  `WP_433` continues that support and adds a light sensor and internal VCC reading.
+The original `WeatherStation` code was designed to support indoor and outdoor DS18B20 thermal sensors on 1m cables as well as humidity and barometric pressure readings from DHT22 (replaced here by DHT20) and MPL3115 sensors, respectively.  `WP_433` continues that support and adds a light sensor and internal VCC reading.
 
 But with up to 6 sources for temperature and only two slots for transmitting temperature in the `omni` format `fmt=1` packet structure, some arbitrary choices were made that can easily be changed (see "Customizing").
 
@@ -90,7 +90,6 @@ The `WP_433` code assumes that the DS18B20 sensors have been labeled internally 
 *  `otemp` is the temperature from DS18B20 labeled "OU", if found; otherwise the reading from the DHT20 if there is one; otherwise 0.
 
 If you don't have or intend to use DS18B20's, you may want to customize the code in `loop()` in `WP_433.ino` to select `itemp` and `otemp` from the set of sensors you do have.
-
 
 ## Customizing
 
@@ -109,12 +108,12 @@ Operating parameters are set in both the `.h` and `.ino` files.
 
 ### Replacing Sensors
 
-The code was designed to make it relatively easy to replace the repository set of sensors (MPL3115, DHT20, DS18B20, Light-01) with other sensors:
+The code was designed to make it relatively easy to replace the repository's set of sensors (MPL3115, DHT20, DS18B20, Light-01) with other sensors:
 
 *  Sensor data for all the sensors are collected in `readSensors()` and reported back to the Serial Monitor by `reportSensors()`, so most editing would be done in those two procedures.
 *  The sensor data (except Arduino VCC) are collected in a single `struct recordValues` variable.
 *  All data are represented as type `float` in that `struct` record.
-*  The intentionally-succinct main `loop()` code converts those `float` values to the type appropriate for the data being transmitted (e.g., `light` is a `uint8_t` to represent 0% to 100%; temperatures are of type `int16_t`; etc.), with the data type in that loop designed to match the format needed for transmission in the `omni` protocol and as packed for message transmission by `pack_msg()` in the `class WP_433` definition.
+*  The intentionally-succinct main `loop()` code converts those `float` values to the type appropriate for the data being transmitted (e.g., in the ISM message packet, the value for `light` is a `uint8_t` byte to represent 0% to 100%; temperatures are of type `int16_t`; etc.), with the data type in that loop designed to match the format needed for transmission in the `omni` protocol and as packed for message transmission by `pack_msg()` in the `class WP_433` definition.
 
 So to use a different type of sensor, you would:
 
