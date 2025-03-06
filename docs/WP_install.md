@@ -105,7 +105,7 @@ Operating parameters are set in both the `.h` and `.ino` files.
 5.  Sensors are sampled and transmitted at a frequency set by `#define LOOPTIME` in `WP_433.ino`.  Change it from the default 30 sec (30*1000 milliseconds) if you want some other sampling rate.
 6.  You can set the device ID to any value [0..15] in the `WP_433.ino` code, but the channel (variable `fmt` in the `.ino` code) must remain set to 1 unless you implement your own `omnisensor` format in the `.ino` code and in the rtl_433 `omni.c` decoder.
 7.  To change the selection of temperatures reported as "temperature_C" and temperature_2_C", modify the code in `loop()` to select the fields of the `rec` structured variable to use for `itemp` and `otemp`.
-7.  If you're using DS18B20 thermal sensors, you can set their internal labels (e.g, "IN" and "OU") using the 
+8.  If you're using DS18B20 thermal sensors, you can set their internal labels (e.g, "IN" and "OU") using the `DS18_Labeler` program from the `examples` folder in the [DS18](https://github.com/hdtodd/DS18)
 
 ### Replacing Sensors
 
