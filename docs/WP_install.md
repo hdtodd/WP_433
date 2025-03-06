@@ -77,7 +77,7 @@ In the repository code as distributed, the values reported by rtl_433 **as trans
 *  "humidity": Relative Humidity, in %, from DHT20.
 *  "Light %": Read as voltage from the Light-01 photoresistor sensor and scaled to be 0-100%; see "Customizing" if Light-01 is connected to 3V3 as VCC.
 *  "pressure_hPa": Barometric pressure, in hPa, from MPL3115.
-*  "voltage_V": Scaled from the internal reference voltage of the Arduino.  Not accurate, but may show tends.
+*  "voltage_V": Approximate Arduino VCC supply voltage; scaled from the internal reference voltage of the Arduino.  Not accurate, but may show tends.
 
 Here are details about the data reported and transmitted.
 
