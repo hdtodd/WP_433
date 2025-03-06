@@ -111,19 +111,19 @@ Operating parameters are set in both the `.h` and `.ino` files.
 
 The code was designed to make it relatively easy to replace the repository set of sensors (MPL3115, DHT20, DS18B20, Light-01) with other sensors:
 
-*  Sensor data for all the sensors are collected in `readSensors()` and reported back to the Serial Monitor by `reportSensors`, so most editing would be done there.
+*  Sensor data for all the sensors are collected in `readSensors()` and reported back to the Serial Monitor by `reportSensors()`, so most editing would be done in those two procedures.
 *  The sensor data (except Arduino VCC) are collected in a single `struct recordValues` variable.
 *  All data are represented as type `float` in that `struct` record.
-*  The intentionally-succinct main `loop()` code converts those `float` values to the type appropriate for the data being transmitted (e.g., `light` is a `uint8_t` to represent 0% to 100%; temperatures are of type `int16_t`; etc.), with the data type in that loop designed to match the format needed for transmission in the `omni` protocol.
+*  The intentionally-succinct main `loop()` code converts those `float` values to the type appropriate for the data being transmitted (e.g., `light` is a `uint8_t` to represent 0% to 100%; temperatures are of type `int16_t`; etc.), with the data type in that loop designed to match the format needed for transmission in the `omni` protocol and as packed for message transmission by `pack_msg()` in the `class WP_433` definition.
 
 So to use a different type of sensor, you would:
 
-*  Remove references to the sensor you're replacing, including pin assignments in the `.h` file.
+*  Remove references to the sensor you're replacing, including pin assignments in the `.h` file and insert any new pin definitions you need, making sure to avoid pin-assignment conflicts (pin dictionary at the top of the `.h` file).
 *  `#include` the `.h` file for the sensor library you want to invoke.
 *  In `setup()`, remove any initiation of the sensor you're replacing and insert the initiation for your new sensor.
-*  In `readSensors`, replace the reading of sensor data from the replaced sensor with reading of data from your new sensor and assign the value to the appropriate `rec` field.
+*  In `readSensors()`, replace the reading of sensor data from the replaced sensor with reading of data from your new sensor and assign the value to the appropriate `rec` field.
 *  If you have different types of data (other than temperatures, humdity, barometric pressure, a % reading from some device, or a voltage reading), you'll need to modify the `struct` definition in the `.h` file and the references to them in `readSensors`, `reportSensors`, and the assignment to packet fields in `loop()`.
-*  If you need a different format for your data and can't reuse one of the packet fields for the data, you'll need to modify the code in the `class WP_433` definitions for `pack_msg()` and `unpack_msg()` to create and retrieve your data from the 8-byte data payload packet transmitted by `WP_433`.  See the documentation in the `omnisensor` repository for the `ISM_Emulator` code that can help you create and debug that pack/unpack format.
+*  If you need a different format for your data and can't reuse one of the existing packet fields for the data, you'll need to modify the code in the `class WP_433` definitions for `pack_msg()` and `unpack_msg()` to create and retrieve your data from the 8-byte data payload packet transmitted by `WP_433`.  See the documentation and tools in the [ISM_Emulator](https://github.com/hdtodd/ISM_Emulator) repository for code that can help you create and debug that pack/unpack format.
 
 ## Operational Notes
 
