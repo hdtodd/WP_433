@@ -7,10 +7,11 @@ WP_433 is an Arduino microcontroller program for transmitting weather sensor dat
 The rtl_433 JSON reports of the transmitted data packets look like this:
 
 ```
-{"time":"2025-03-04 17:55:08","protocol":275,"model":"omni","id":1,"channel":1,
-"temperature_C":23.3,"temperature_2_C":22.8,"humidity":23.0,"Light %":99.0,
-"pressure_hPa":1018.8,"voltage_V":4.77,"mic":"CRC","mod":"ASK",
-"freq":433.95258,"rssi":-0.220131,"snr":16.9172,"noise":-17.1373}
+{"time":"2025-03-08 11:36:24","protocol":275,"model":"omni","id":1,"channel":1,
+"temperature_C":22.5,"temperature_2_C":23.7,"humidity":23.0,"Light %":75.0,
+"pressure_hPa":996.4,"voltage_V":4.75,"mic":"CRC","mod":"ASK","freq":433.95155,
+"rssi":-0.211433,"snr":16.71867,"noise":-16.9301}
+
 ```
 
 

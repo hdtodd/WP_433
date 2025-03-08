@@ -36,24 +36,35 @@ The WS_433 code supports the use of *any combination* of these sensors.  If no s
 In operation, the Arduino IDE Serial Monitor window will show:
 
 ```
-17:51:26.418 -> --------------------------------
-17:51:26.450 -> Report of readings from sensors:
-17:51:26.514 -> DHT20:  	Temp=22, RH=23%
-17:51:26.514 -> MPL3115:	Temp=23, Alt=181m, Baro=101895Pa
-17:51:26.578 -> DS18B20:	Temp IN: 23    
-17:51:26.611 -> Light:		98%
-17:51:26.775 -> Transmit msg 21	iTemp=23.30˚C, oTemp=22.90˚C, iHum=23.00%, Light=98.00%, Press=1019.00hPa, VCC=4.75volts
-17:51:26.871 -> 	The msg packet, length=80, in hex: 0x 11 0E 90 E5 17 62 27 CE AF 2E 
-17:51:26.968 -> 	and as a bit string: 00010001000011101001000011100101000101110110001000100111110011101010111100101110
+11:36:20.626 -> WP_433 starting
+11:36:20.626 -> I2C started
+11:36:20.659 -> Created baro
+11:36:20.659 -> Finished baro.begin
+11:36:20.691 -> [%WP] MPL3115 is connected
+11:36:21.054 -> [%WP] DHT20 is connected
+11:36:21.581 -> [%WP] DS18 probes connected: 1	Labeled: IN
+11:36:23.062 -> WP_433 Arduino-Based Weather Sensor startup complete
+11:36:24.249 -> 
+11:36:24.249 -> --------------------------------
+11:36:24.282 -> Report of readings from sensors:
+11:36:24.314 -> DHT20:  	Temp=23, RH=23%
+11:36:24.346 -> MPL3115:	Temp=23, Alt=439m, Baro=99637Pa
+11:36:24.379 -> DS18B20:	Temp IN: 22    
+11:36:24.412 -> Light:		75%
+11:36:24.575 -> Transmit msg 1	iTemp=22.50˚C, oTemp=23.70˚C, iHum=23.00%, Light=75.00%, Press=996.40hPa, VCC=4.75volts
+11:36:24.704 -> 	The msg packet, length=80, in hex: 0x 11 0E 10 ED 17 4B 26 EC AF 09 
+11:36:24.768 -> 	and as a bit string: 00010001000011100001000011101101000101110100101100100110111011001010111100001001
+
 ```
 
 and monitoring the rtl_433 JSON feed with `mosquitto_sub -h pi-1 -t "rtl_433/pi-1/events"`, for example, will show:
 
 ```
-{"time":"2025-03-04 17:55:08","protocol":275,"model":"omni","id":1,"channel":1,
-"temperature_C":23.3,"temperature_2_C":22.8,"humidity":23.0,"Light %":99.0,
-"pressure_hPa":1018.8,"voltage_V":4.77,"mic":"CRC","mod":"ASK",
-"freq":433.95258,"rssi":-0.220131,"snr":16.9172,"noise":-17.1373}
+{"time":"2025-03-08 11:36:24","protocol":275,"model":"omni","id":1,"channel":1,
+"temperature_C":22.5,"temperature_2_C":23.7,"humidity":23.0,"Light %":75.0,
+"pressure_hPa":996.4,"voltage_V":4.75,"mic":"CRC","mod":"ASK","freq":433.95155,
+"rssi":-0.211433,"snr":16.71867,"noise":-16.9301}
+
 ```
 
 ## Reported Values
