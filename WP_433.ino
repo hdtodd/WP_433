@@ -195,7 +195,8 @@ bool debug = false;
 #define LOOPTIME 30*1000
 
 // #include <stdio.h>
-#include <Adafruit_AHTX0.h>
+//#include <Adafruit_AHTX0.h>
+#include <DHT20.h>
 #include <DS18.h>      // DS18B20 temp sensors
 #include <MPL3115A2.h> // MPL3115 alt/baro/temp
 #include <OneWire.h>
@@ -260,7 +261,7 @@ class ISM_Device {
   public:
     // These are used by the device object procedures
     //   to process the waveform description into a command list
-    SIGNAL_T cmdList[350];
+    SIGNAL_T cmdList[REPEATS*88+1];
     uint16_t listEnd   = 0;
     String Device_Name = "ISM Device";
     SIGNAL *signals;
@@ -440,8 +441,8 @@ bool   first    = true;
 boolean haveDHT, haveMPL, haveDS18;
 struct recordValues rec;
 MPL3115A2 baro;               // Barometer/altimeter/thermometer
-Adafruit_AHTX0 myDHT20;       // create the temp/RH object
-sensors_event_t humidity, temp; // Object needed by DHT20
+DHT20  myDHT20;               // create the temp/RH object
+//sensors_event_t humidity, temp; // Object needed by DHT20
 DS18 ds18(oneWirePin);        // Create the DS18 object.
 dsInfo dsList[DSMAX + 1];     // max number of DS devices + loop guard
 int dsCount;                  // Count the number of DS18B20 probes
@@ -458,7 +459,7 @@ void setup(void)
     delay(1000);
     DBG_println(F("WP_433 starting"));
     I2c.begin();                      // join i2c bus
-    I2c.setSpeed(1);                  // go fast
+    I2c.setSpeed(0);                  // go fast
     DBG_println(F("I2C started"));
     // Force transmit pin and LED pin low as initial conditions
     pinMode(TX, OUTPUT);
@@ -569,8 +570,9 @@ void loop(void)
     uint8_t ihum, light, volts;
     uint16_t press;
     int16_t itemp, otemp;
-    float itempf, otempf, ihumf, lightf, pressf, voltsf;
+    //    float itempf, otempf, ihumf, lightf, pressf, voltsf;
 
+    
     // Read all the available sensors into "rec" & report
     readSensors(&rec);
     if (debug) reportSensors(&rec);
@@ -640,9 +642,9 @@ void readSensors(struct recordValues *rec)
 
     if (haveDHT) {
         // Get DHT20 data 
-        myDHT20.getEvent(&humidity, &temp);
-        rec->dht.tempf = temp.temperature;
-        rec->dht.rh    = humidity.relative_humidity;
+        myDHT20.read();
+        rec->dht.tempf = myDHT20.getTemperature();
+        rec->dht.rh    = myDHT20.getHumidity();
     }
     else {
         rec->dht.tempf = 0.0;
@@ -717,7 +719,8 @@ float readVcc()
     result |= ADCH << 8;                
     // Calculate & return Vcc (in V); intVREFbin = ~1100 mV
     // (measured vref / (1024/5 v) measured VREF volts) * (5v VCC volts /1.1v VREF volts)
-    return  (float) result / 1024.0 * 5.0 * 5.0 / 1.1;;                      
+    //return  (float) result / 1024.0 * 5.0 * 5.0 / 1.1;
+    return  (float) result * 0.0221946;
   
 #elif defined(ARDUINO_ARCH_RENESAS)     // for RA4M1 boards (such as Arduino Uno R4)
     // analogReference() reads Vcc, based on internal reference,
@@ -764,34 +767,28 @@ void reportMsg(uint8_t msg[])
     uint8_t fmt, id,ihum, light, volts;
     uint16_t press;
     int16_t itemp, otemp;
-    float itempf, otempf, ihumf, lightf, pressf, voltsf;
+    //    float itempf, otempf, ihumf, lightf, pressf, voltsf;
 
     om.unpack_msg(msg, fmt, id, itemp, otemp, ihum, light, press, volts);
-    itempf = ((float)itemp) / 10.0;
-    otempf = ((float)otemp) / 10.0;
-    ihumf  = ((float)ihum);
-    lightf  = ((float)light);
-    pressf = ((float)press);
-    voltsf = ((float)volts) / 100.0 + 3.00;
     DBG_print(F("Transmit msg "));
     DBG_print(++count);
     DBG_print(F("\tiTemp="));
-    DBG_print(itempf);
+    DBG_print( ((float)itemp) / 10.0);
     DBG_print(F("˚C"));
     DBG_print(F(", oTemp="));
-    DBG_print(otempf);
+    DBG_print( ((float)otemp) / 10.0);
     DBG_print(F("˚C"));
     DBG_print(F(", iHum="));
-    DBG_print(ihumf);
+    DBG_print((float)ihum);
     DBG_print(F("%"));
     DBG_print(F(", Light="));
-    DBG_print(lightf);
+    DBG_print((float)light);
     DBG_print(F("%"));
     DBG_print(F(", Press="));
-    DBG_print(pressf / 10.0);
+    DBG_print( ((float)press) / 10.0);
     DBG_print(F("hPa"));
     DBG_print(F(", VCC="));
-    DBG_print(voltsf);
+    DBG_print( ((float)volts) /100.0 + 3.00);
     DBG_println(F("volts"));
     DBG_print(F("\tThe msg packet, length="));
     DBG_print((int)omniLen);
