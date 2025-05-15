@@ -1,6 +1,6 @@
 // Definitions used by the Arduino Uno Weather Sensor,  WP_433.ino
 //
-#define Vers "WP_433 v1.0"    // <Code-version> 
+#define Vers "WP_433 v1.2"    // <Code-version> 
 
 #define LED    13      // Flash LED on pin 13 when transmitting
 #define REPEATS 3      // Number of times to repeat packet in one transmission

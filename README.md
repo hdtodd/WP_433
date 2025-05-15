@@ -1,4 +1,4 @@
-# WP_433 v1.1
+# WP_433 v1.2
 ## An rtl_433-compatible, Arduino Uno-based remote weather probe
 
 WP_433 is an Arduino microcontroller program for transmitting weather sensor data to an rtl_433 server via 433MHz (ISM band) radio transmission.  It is a redevelopment into the rtl_433 ISM-band wireless remote sensor environment of the earlier [WeatherStation](https://github.com/hdtodd/WeatherStation) code.  That system relied upon a USB-serial connection to a host computer for logging data.  WP_433 transmits over the ISM band so that standard rtl_433 tools can be used to process or log data.  It does not require an ongoing connection to a host computer.
@@ -33,7 +33,8 @@ A breadboard wiring diagram is provided in the `docs` directory of this reposito
 
 | Version  | Changes |
 |----------|---------|
-| V1.1    | 2025.05.10 Changed CRC-8 'init' from 0x00 to 0xaa, following a recommendation by Christian Zuckschwerdt, reviewing Williams' recommendation not to use 0x00 as 'init', and modeling reliability of error detection in the event of block error insertions [ISMErrDetect](https://github.com/hdtodd/ISMErrDetect).|
+| V1.2     | 2025.05.15 Correct comments to change "humidity_2" to "Light %". |
+| V1.1     | 2025.05.10 Changed CRC-8 'init' from 0x00 to 0xaa, following a recommendation by Christian Zuckschwerdt, reviewing Williams' recommendation not to use 0x00 as 'init', and modeling reliability of error detection in the event of block error insertions [ISMErrDetect](https://github.com/hdtodd/ISMErrDetect).|
 | V1.0    | 2025.03.04  First operational version. |
 
 ## Author

@@ -130,22 +130,20 @@
             divisor polynomial 0x97, no reflections or inversions
 
     A format=1 message format is provided as a more complete example.
-    It uses the Bosch BME688 environmental sensor as a data source.
-    It is an indoor-outdoor temperature/humidity/pressure sensor, and the
-    message packet has the following fields:
-        indoor temp, outdoor temp, indoor humidity, outdoor humidity,
-        barometric pressure, sensor power VCC.
+    The message packet has the following fields:
+        indoor temp, outdoor temp, indoor humidity, light %, 
+        barometric pressure, microcontroller power VCC.
     The data fields are binary values, 2's complement for temperatures.
     For format=1 messages, the message nibbles are to be read as:
 
-         fi 11 12 22 hh gg pp pp vv cc
+         fi 11 12 22 hh ll pp pp vv cc
 
          f: format of datagram, 0-15
          i: id of device, 0-15
          1: sensor 1 temp reading (e.g, indoor),  °C *10, 12-bit, 2's complement integer
          2: sensor 2 temp reading (e.g, outdoor), °C *10, 12-bit, 2's complement integer
-         h: sensor 1 humidity reading (e.g., indoor),  %RH as 8-bit integer
-         g: sensor 2 humidity reading (e.g., outdoor), %RH as 8-bit integer
+         h: humidity reading (e.g., indoor),  %RH as 8-bit integer
+         l: light intensity % as 8-bit integer
          p: barometric pressure * 10, in hPa, as 16-bit integer, 0..6553.5 hPa
          v: (VCC-3.00)*100, as 8-bit integer, in volts: 3V00..5V55 volts
          c: CRC8 checksum of bytes 1..9, initial remainder 0xaa,
@@ -309,7 +307,7 @@ class WP_433 : public ISM_Device {
     int sigLen             = 6;
     SIGNAL omni_signals[6] = {
         {SIG_SYNC,     "Sync",     600,  600},  // 600, 600
-        {SIG_SYNC_GAP, "Sync-gap", 200,  800},  // 200, 800
+        {SIG_SYNC_GAP, "Sync-gap",   0,    0},
         {SIG_ZERO,     "Zero",     400,  200},  // 400, 200
         {SIG_ONE,      "One",      200,  400},  // 200, 400
         {SIG_IM_GAP,   "IM_gap",     0, 1250},
@@ -336,7 +334,9 @@ class WP_433 : public ISM_Device {
          uint16_t <temp>  is a 16-bit signed twos-complement integer representing
                           10*(temperature reading)
          uint8_t  <hum>   is an 8-bit unsigned integer
-                          representing the relative humidity as integer
+                          representing the relative humidity as integer %
+         uint8_t  <light> is an 8-bit unsigned integer
+                          representing the relative intensity as integer %
          uint16_t <press> is a 16-bit unsigned integer representing
                           10*(barometric pressure) (in hPa)
          uint16_t <volts> is a 16-bit unsigned integer
@@ -346,14 +346,14 @@ class WP_433 : public ISM_Device {
 
          Output in "msg" as nibbles:
 
-             fi 11 12 22 hh gg pp pp vv cc
+             fi 11 12 22 hh ll pp pp vv cc
 
              f: format of datagram, 0-15
              i: id of device, 0-15
              1: sensor 1 temp reading (e.g, indoor),  °C *10, 2's complement
              2: sensor 2 temp reading (e.g, outdoor), °C *10, 2's complement
              h: sensor 1 humidity reading (e.g., indoor),  %RH as integer
-             g: sensor 2 humidity reading (e.g., outdoor), %RH as integer
+             l: Light-01 light intensity % as 8-bit integer
              p: barometric pressure * 10, in hPa, 0..65535 hPa*10
              v: (VCC-3.00)*100, in volts,  000...255 volts*100
              c: CRC8 checksum of bytes 1..9, initial remainder 0xaa,
@@ -391,7 +391,7 @@ class WP_433 : public ISM_Device {
             iTemp = 0;
             oTemp = 0;
             iHum  = 0;
-            light  = 0;
+            light = 0;
             press = 0;
             volts = 0;
         }
@@ -403,7 +403,7 @@ class WP_433 : public ISM_Device {
                     ((int16_t)((((uint16_t)msg[2]) << 12) | ((uint16_t)msg[3]) << 4)) >>
                     4;
             iHum  = msg[4];
-            light  = msg[5];
+            light = msg[5];
             press = ((uint16_t)(msg[6] << 8)) | msg[7];
             volts = msg[8];
         };
@@ -433,9 +433,7 @@ class WP_433 : public ISM_Device {
     }; // end .make_wave()
 }; // end class omni
 
-
 // Global variables
-
 WP_433   om;                  // The omni object as a global
 uint8_t omniLen = 80;         // omni messages are 80 bits long
 int    count    = 0;          // Count the packets sent
@@ -444,7 +442,6 @@ boolean haveDHT, haveMPL, haveDS18;
 struct recordValues rec;
 MPL3115A2 baro;               // Barometer/altimeter/thermometer
 DHT20  myDHT20;               // create the temp/RH object
-//sensors_event_t humidity, temp; // Object needed by DHT20
 DS18 ds18(oneWirePin);        // Create the DS18 object.
 dsInfo dsList[DSMAX + 1];     // max number of DS devices + loop guard
 int dsCount;                  // Count the number of DS18B20 probes
@@ -572,8 +569,6 @@ void loop(void)
     uint8_t ihum, light, volts;
     uint16_t press;
     int16_t itemp, otemp;
-    //    float itempf, otempf, ihumf, lightf, pressf, voltsf;
-
     
     // Read all the available sensors into "rec" & report
     readSensors(&rec);
@@ -732,7 +727,7 @@ float readVcc()
     // Reading (Vcc in V) is returned as a result of readVccUnoR4 function
     return ( (float) analogReference() * intVREF);
 #else
-    return 0.0;                         // return result Vcc of 0 if chip is not supported by this function
+    return 0.0;  // return result Vcc of 0 if chip is not supported by this function
 #endif
 }
 void reportSensors(struct recordValues *rec)
