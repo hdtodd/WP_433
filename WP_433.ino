@@ -112,7 +112,7 @@
     - data are 16 nibbles = 8 bytes of data payload fields,
           interpreted according to 'fmt'
     - crc8 is 2 nibbles = 1 byte of CRC8 checksum of the first 9 bytes:
-          polynomial 0x97, init 0x00
+          polynomial 0x97, init 0xaa
 
     A format=0 message simply transmits the core temperature and input power
     voltage of the microcontroller and is the format used if no data
@@ -126,7 +126,7 @@
          t: Pico 2 core temperature: °C *10, 12-bit, 2's complement integer
          0: bytes should be 0
          v: (VCC-3.00)*100, as 8-bit integer, in volts: 3V00..5V55 volts
-         c: CRC8 checksum of bytes 1..9, initial remainder 0x00,
+         c: CRC8 checksum of bytes 1..9, initial remainder 0xaa,
             divisor polynomial 0x97, no reflections or inversions
 
     A format=1 message format is provided as a more complete example.
@@ -148,7 +148,7 @@
          g: sensor 2 humidity reading (e.g., outdoor), %RH as 8-bit integer
          p: barometric pressure * 10, in hPa, as 16-bit integer, 0..6553.5 hPa
          v: (VCC-3.00)*100, as 8-bit integer, in volts: 3V00..5V55 volts
-         c: CRC8 checksum of bytes 1..9, initial remainder 0x00,
+         c: CRC8 checksum of bytes 1..9, initial remainder 0xaa,
                 divisor polynomial 0x97, no reflections or inversions
 
     When asserting/deasserting voltage to the signal pin, timing
@@ -189,6 +189,8 @@ bool debug = false;
 #define DBG_write(...)
 #define DBG_println(...)
 #endif
+
+#define initCRC 0xaa  // initial remainder for CRC-8 algorithm
 
 // Time between sampling & broadcasts
 //#define LOOPTIME 5*1000
@@ -354,7 +356,7 @@ class WP_433 : public ISM_Device {
              g: sensor 2 humidity reading (e.g., outdoor), %RH as integer
              p: barometric pressure * 10, in hPa, 0..65535 hPa*10
              v: (VCC-3.00)*100, in volts,  000...255 volts*100
-             c: CRC8 checksum of bytes 1..9, initial remainder 0x00,
+             c: CRC8 checksum of bytes 1..9, initial remainder 0xaa,
                     divisor polynomial 0x97, no reflections or inversions
     */
     /* clang-format on */
@@ -372,7 +374,7 @@ class WP_433 : public ISM_Device {
         msg[6] = (press >> 8) & 0xff;
         msg[7] = press & 0xff;
         msg[8] = volts & 0xff;
-        msg[9] = crc8(msg, 9, 0x97, 0x00);
+        msg[9] = crc8(msg, 9, 0x97, initCRC);
         return;
     };
 
@@ -381,7 +383,7 @@ class WP_433 : public ISM_Device {
             int16_t &oTemp, uint8_t &iHum, uint8_t &light, uint16_t &press,
             uint8_t &volts)
     {
-        if (msg[9] != crc8(msg, 9, 0x97, 0x00)) {
+        if (msg[9] != crc8(msg, 9, 0x97, initCRC)) {
             DBG_println(
                     F("Attempt unpack of invalid message packet: CRC8 checksum error"));
             fmt   = 0;
@@ -599,7 +601,8 @@ void loop(void)
     volts = (uint8_t) ( ((readVcc()-3.00) + .005) * 100.0 );
 
     // Pack the message, create the waveform, and transmit
-    om.pack_msg(fmt, id, itemp, otemp, ihum, light, press, volts, msg);
+    // Use 'otemp' as "temperature_C" and 'itemp' as "temperature_2_C"
+    om.pack_msg(fmt, id, otemp, itemp, ihum, light, press, volts, msg);
     om.make_wave(msg, omniLen);
     digitalWrite(LED, HIGH);
     om.playback();
@@ -767,9 +770,8 @@ void reportMsg(uint8_t msg[])
     uint8_t fmt, id,ihum, light, volts;
     uint16_t press;
     int16_t itemp, otemp;
-    //    float itempf, otempf, ihumf, lightf, pressf, voltsf;
 
-    om.unpack_msg(msg, fmt, id, itemp, otemp, ihum, light, press, volts);
+    om.unpack_msg(msg, fmt, id, otemp, itemp, ihum, light, press, volts);
     DBG_print(F("Transmit msg "));
     DBG_print(++count);
     DBG_print(F("\tiTemp="));
